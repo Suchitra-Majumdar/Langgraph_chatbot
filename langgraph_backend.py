@@ -10,25 +10,29 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.checkpoint.memory import MemorySaver #saves in RAM memory
 load_dotenv(dotenv_path='F:\\agentic_ai\\AgenticAIWorkspace\\.env')
 
+
 llm = ChatOpenAI()
 
 class ChatState(TypedDict):
-    messages = Annotated[list[BaseMessage],add_messages]
+    messages: Annotated[list[BaseMessage], add_messages]
 
-def chat_node(state:ChatState):
+# def chat_node(state:ChatState):
+#     messages = state['messages']
+#     response = llm.invoke(messages)
+#     return {'messages':[response]}
+def chat_node(state: ChatState):
     messages = state['messages']
-    response = llm.invoke(messages).content
-    return {'messages':[response]}
+    response = llm.invoke(messages)
+    return {"messages": [response]}
 
 #greph
 
 checkpointer = InMemorySaver()
+
 graph = StateGraph(ChatState)
+graph.add_node("chat_node", chat_node)
+graph.add_edge(START, "chat_node")
+graph.add_edge("chat_node", END)
 
-# add node
-graph.add_node('chat_node',chat_node)
-
-# add edge
-graph.add_edge(START,'chat_node')
-graph.add_edge('chat_node',END)
 chatbot = graph.compile(checkpointer=checkpointer)
+# chatbot = graph.compile()
